@@ -7,4 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Photo extends Model
 {
    protected $guarded = [];
+
+   public function event(){
+		return $this->belongsTo(Event::class);
+	}
 }

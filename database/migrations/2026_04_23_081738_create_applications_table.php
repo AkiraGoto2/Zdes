@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('applications', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-			$table->foreignId('user_id');
-			$table->foreignId('event_id');
+			$table->foreignId('user_id')->constrained();
+			$table->foreignId('event_id')->constrained();
 			$table->enum ('status', ['draft', 'published', 'cancelled'])->default('draft');
 			
         });

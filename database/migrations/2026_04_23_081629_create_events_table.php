@@ -11,20 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('events', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+       Schema::create('events', function (Blueprint $table) {
+			$table->id();
+			$table->timestamps();
+
 			$table->foreignId('user_id')->constrained();
 			$table->foreignId('category_id')->constrained();
+
 			$table->string('name');
-			$table->dateTime('event_date');;
-			$table->enum ('age', ['0+', '6+', '12+', '16+', '18+']);
+			$table->dateTime('event_date');
+			$table->enum('age', ['0+', '6+', '12+', '16+', '18+']);
 			$table->text('description');
 			$table->unsignedInteger('price')->nullable();
 			$table->string('address');
-			$table->foreignId('photo_id')->constrained()->nullable();
-			$table->foreignId('socials_id')->constrained()->nullable();
-        });
+		});
     }
 
     /**
