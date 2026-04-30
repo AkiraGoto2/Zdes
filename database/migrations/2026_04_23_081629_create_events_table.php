@@ -1,40 +1,81 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+namespace Database\Seeders;
 
-return new class extends Migration
+use Illuminate\Database\Seeder;
+use App\Models\User;
+use App\Models\Event;
+use Illuminate\Support\Facades\Hash;
+
+class DatabaseSeeder extends Seeder
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function run(): void
     {
-       Schema::create('events', function (Blueprint $table) {
-			$table->id();
-			$table->timestamps();
+        // 10 пользователей
+        $users = User::factory()->count(10)->create()->each(function ($user) {
+            $user->update([
+                'lastname' => fake()->lastName(),
+                'tel' => fake()->phoneNumber(),
+                'password' => Hash::make('password'),
+            ]);
+        });
 
-			$table->foreignId('user_id')->constrained();
-			$table->foreignId('category_id')->constrained();
+        // тестовый пользователь
+        $testUser = User::create([
+            'name' => 'Test',
+            'lastname' => 'User',
+            'tel' => '+79999999999',
+            'email' => 'test@example.com',
+            'password' => Hash::make('password'),
+        ]);
 
-			$table->string('name');
-			$table->dateTime('event_date');
-			$table->enum('age', ['0+', '6+', '12+', '16+', '18+']);
-			$table->text('description');
-			$table->unsignedInteger('price')->nullable();
-			$table->string('address');
+        // события
+        $events = [
+            [
+                'name' => 'Концерт в парке',
+                'address' => 'Челябинск, Парк Гагарина',
+                'lat' => 55.1602,
+                'lng' => 61.4021,
+            ],
+            [
+                'name' => 'Выставка искусства',
+                'address' => 'Челябинск, ул. Ленина 45',
+                'lat' => 55.1599,
+                'lng' => 61.3950,
+            ],
+            [
+                'name' => 'Фестиваль еды',
+                'address' => 'Челябинск, ТРК Горки',
+                'lat' => 55.1735,
+                'lng' => 61.3982,
+            ],
+            [
+                'name' => 'Открытый кинотеатр',
+                'address' => 'Челябинск, набережная',
+                'lat' => 55.1650,
+                'lng' => 61.4100,
+            ],
+            [
+                'name' => 'Йога на свежем воздухе',
+                'address' => 'Челябинск, парк Победы',
+                'lat' => 55.1801,
+                'lng' => 61.3899,
+            ],
+        ];
 
-            $table->decimal('lat', 10, 7)->nullable();
-            $table->decimal('lng', 10, 7)->nullable();
-		});
+        foreach ($events as $event) {
+            Event::create([
+                'user_id' => $testUser->id,
+                'category_id' => 1, // если нет — создай категорию!
+                'name' => $event['name'],
+                'event_date' => now()->addDays(rand(1, 10)),
+                'age' => ['0+', '6+', '12+', '16+', '18+'][rand(0, 4)],
+                'description' => fake()->text(120),
+                'price' => rand(0, 2000),
+                'address' => $event['address'],
+                'lat' => $event['lat'],
+                'lng' => $event['lng'],
+            ]);
+        }
     }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('events');
-    }
-};
+}

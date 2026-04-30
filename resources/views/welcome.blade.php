@@ -79,17 +79,30 @@
 
     @if (Route::has('login'))
         <nav class="flex items-center gap-4">
-            @auth
-                <a href="{{ url('/dashboard') }}"
-                   class="bg-[#4A40E0] text-white rounded-[12px] text-[16px] py-2 px-6 font-semibold">
-                    Профиль
-                </a>
-            @else
-                <a href="{{ route('login') }}"
-                   class="bg-[#4A40E0] text-white rounded-[12px] text-[16px] py-2 px-6 font-semibold">
-                    Войти
-                </a>
-            @endauth
+           @auth
+                        <a
+                            href="{{ url('/dashboard') }}"
+                            class="bg-[#4A40E0] text-white rounded-[12px] text-[16px] py-2 px-6 font-semibold"
+                        >
+                            Профиль
+                        </a>
+                    @else
+						@if (Route::has('register'))
+                            <a
+                                href="{{ route('register') }}"
+                                class=" text-[#475569] rounded-[12px] text-[16px] py-2 px-6 font-semibold hover:bg-gray-100 hover:text-[#4A40E0] transition-colors">
+                                Зарегистрироваться
+                            </a>
+                        @endif
+                        <a
+                            href="{{ route('login') }}"
+                            class="bg-[#4A40E0] text-white rounded-[12px] text-[16px] py-2 px-6 font-semibold  hover:bg-[#867dff] hover:text-[#f4f4f4] transition-colors"
+                        >
+                            Войти
+                        </a>
+
+                        
+                    @endauth
         </nav>
     @endif
 
