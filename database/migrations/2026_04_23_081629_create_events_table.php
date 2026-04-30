@@ -24,6 +24,9 @@ return new class extends Migration
 			$table->text('description');
 			$table->unsignedInteger('price')->nullable();
 			$table->string('address');
+
+            $table->decimal('lat', 10, 7)->nullable();
+            $table->decimal('lng', 10, 7)->nullable();
 		});
     }
 
