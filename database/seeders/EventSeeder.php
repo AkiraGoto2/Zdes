@@ -51,23 +51,25 @@ class EventSeeder extends Seeder
                 'age'         => '18+',
                 'price'       => 1200,
                 'price_to'    => null,
-                'address'     => 'Челябинск, ул. Кирова, 142 (крыша)',
-                'lat'         => 55.1596,
-                'lng'         => 61.4023,
+                // ул. Кирова — центральная улица Челябинска
+                'address'     => 'Челябинск, ул. Кирова, 142',
+                'lat'         => 55.15497,
+                'lng'         => 61.40122,
                 'status'      => 'approved',
             ],
             [
                 'user_id'     => $user1->id,
                 'category_id' => $sport?->id ?? 2,
-                'name'        => 'Sunrise Yoga Flow в Горпарке',
+                'name'        => 'Sunrise Yoga Flow в Городском бору',
                 'description' => 'Утренняя практика йоги на свежем воздухе для всех уровней. Инструктор Мария проведёт вас через приветствие солнца и медитацию. Коврик и вода в наличии.',
                 'event_date'  => now()->addDays(1)->setTime(7, 0),
                 'age'         => '0+',
                 'price'       => 0,
                 'price_to'    => null,
+                // Городской бор — парк на правом берегу Миасса
                 'address'     => 'Челябинск, Городской бор, главный вход',
-                'lat'         => 55.1672,
-                'lng'         => 61.3891,
+                'lat'         => 55.16480,
+                'lng'         => 61.37950,
                 'status'      => 'approved',
             ],
             [
@@ -79,9 +81,10 @@ class EventSeeder extends Seeder
                 'age'         => '6+',
                 'price'       => 300,
                 'price_to'    => 500,
-                'address'     => 'Челябинск, ул. Труда, 92, Музей изобразительных искусств',
-                'lat'         => 55.1553,
-                'lng'         => 61.4002,
+                // Челябинский музей изобразительных искусств — ул. Труда, 92
+                'address'     => 'Челябинск, ул. Труда, 92 (Музей ИЗО)',
+                'lat'         => 55.15928,
+                'lng'         => 61.40275,
                 'status'      => 'approved',
             ],
             [
@@ -93,9 +96,10 @@ class EventSeeder extends Seeder
                 'age'         => '16+',
                 'price'       => 0,
                 'price_to'    => null,
-                'address'     => 'Челябинск, Loft 42, пр. Ленина, 42',
-                'lat'         => 55.1621,
-                'lng'         => 61.4105,
+                // пр. Ленина — главный проспект, 42
+                'address'     => 'Челябинск, пр. Ленина, 42',
+                'lat'         => 55.15824,
+                'lng'         => 61.39768,
                 'status'      => 'approved',
             ],
             [
@@ -107,9 +111,10 @@ class EventSeeder extends Seeder
                 'age'         => '12+',
                 'price'       => 800,
                 'price_to'    => 1000,
-                'address'     => 'Челябинск, ул. Цвиллинга, 15, арт-студия',
-                'lat'         => 55.1535,
-                'lng'         => 61.4188,
+                // ул. Цвиллинга — параллельно Кирова
+                'address'     => 'Челябинск, ул. Цвиллинга, 15',
+                'lat'         => 55.15340,
+                'lng'         => 61.40550,
                 'status'      => 'approved',
             ],
             [
@@ -121,15 +126,16 @@ class EventSeeder extends Seeder
                 'age'         => '0+',
                 'price'       => 0,
                 'price_to'    => null,
+                // Площадь Революции — центральная площадь Челябинска
                 'address'     => 'Челябинск, площадь Революции',
-                'lat'         => 55.1576,
-                'lng'         => 61.3967,
+                'lat'         => 55.15478,
+                'lng'         => 61.41123,
                 'status'      => 'approved',
             ],
         ];
 
         foreach ($events as $data) {
-            Event::firstOrCreate(
+            Event::updateOrCreate(
                 ['name' => $data['name'], 'user_id' => $data['user_id']],
                 $data
             );

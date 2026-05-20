@@ -31,7 +31,24 @@
 
             <nav class="flex items-center gap-3">
                 @auth
-                    <a href="{{ url('/dashboard') }}" class="text-[14px] font-medium text-[#475569] hover:text-[#4A40E0] transition">{{ Auth::user()->name }}</a>
+                    @if(Auth::user()->isAdmin())
+                        <a href="{{ route('admin.index') }}" class="text-[14px]  font-medium text-[#475569] hover:text-amber-700 transition flex items-center gap-1.5">
+                            <!-- <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>-->
+                            Модерация 
+                            @php $adminPending = \App\Models\Event::where('status','pending')->count(); @endphp
+                            @if($adminPending > 0)
+                                <span class="bg-amber-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">{{ $adminPending }}</span>
+                            @endif
+                        </a>
+                    @endif
+                    {{-- Уведомления --}}
+                    @php $unread = Auth::user()->notifications()->where('is_read', false)->count(); @endphp
+                    <a href="{{ route('dashboard') }}" class="relative text-[14px] font-medium text-[#475569] hover:text-[#4A40E0] transition">
+                        {{ Auth::user()->name }}
+                        @if($unread > 0)
+                            <span class="absolute -top-1 -right-2 bg-[#4A40E0] text-white text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">{{ $unread }}</span>
+                        @endif
+                    </a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="text-[14px] font-medium text-[#475569] hover:text-red-500 transition">Выйти</button>

@@ -55,4 +55,13 @@ class User extends Authenticatable
 	public function events(){
 		return $this->hasMany(Event::class);
 	}
+
+	public function notifications(){
+		return $this->hasMany(Notification::class)->orderBy('created_at', 'desc');
+	}
+
+	public function isAdmin(): bool
+	{
+		return $this->role === 'admin';
+	}
 }

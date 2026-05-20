@@ -104,7 +104,7 @@ class EventController extends Controller
     /** Лента событий (публичная) */
     public function index(Request $request)
     {
-        $query = Event::with(['category', 'user'])
+        $query = Event::with(['category', 'user', 'photos'])
             ->where('status', 'approved');
 
         if ($request->filled('q')) {
@@ -166,9 +166,10 @@ class EventController extends Controller
             'address'     => ['required', 'string', 'max:255'],
             'lat'         => ['nullable', 'numeric'],
             'lng'         => ['nullable', 'numeric'],
+            'photos'      => ['nullable', 'array', 'max:8'],
+            'photos.*'    => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        // Если координаты не выбраны вручную — геокодируем адрес
         if (empty($validated['lat']) || empty($validated['lng'])) {
             $coords = $this->geocode($validated['address']);
             if ($coords) {
@@ -180,7 +181,15 @@ class EventController extends Controller
         $validated['user_id'] = Auth::id();
         $validated['status']  = 'pending';
 
-        Event::create($validated);
+        $photos = $request->file('photos', []);
+        unset($validated['photos']);
+
+        $event = \App\Models\Event::create($validated);
+
+        foreach ($photos as $file) {
+            $path = $file->store('events/' . $event->id, 'public');
+            \App\Models\Photo::create(['event_id' => $event->id, 'path' => $path]);
+        }
 
         return redirect()->route('my-events')
             ->with('success', 'Событие отправлено на проверку. После одобрения модератором оно появится на карте.');
@@ -195,6 +204,31 @@ class EventController extends Controller
 
         $event->load(['category', 'user', 'photos']);
         return view('events.show', compact('event'));
+    }
+
+    /** Dashboard — профиль пользователя */
+    public function dashboard()
+    {
+        $user = Auth::user();
+
+        // Созданные мероприятия
+        $myEvents = Event::where('user_id', $user->id)
+            ->with('category')
+            ->orderBy('event_date', 'desc')
+            ->get();
+
+        // Мероприятия на которые записан
+        $applications = \App\Models\Application::where('user_id', $user->id)
+            ->where('status', 'published')
+            ->with(['event.category'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Непрочитанные уведомления
+        $notifications = $user->notifications()->get();
+        $unreadCount   = $notifications->where('is_read', false)->count();
+
+        return view('dashboard', compact('myEvents', 'applications', 'notifications', 'unreadCount'));
     }
 
     /** Мои события */
@@ -232,9 +266,10 @@ class EventController extends Controller
             'address'     => ['required', 'string', 'max:255'],
             'lat'         => ['nullable', 'numeric'],
             'lng'         => ['nullable', 'numeric'],
+            'photos'      => ['nullable', 'array'],
+            'photos.*'    => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        // Перегеокодируем если адрес изменился и нет ручных координат
         if ((empty($validated['lat']) || empty($validated['lng'])) && $validated['address'] !== $event->address) {
             $coords = $this->geocode($validated['address']);
             if ($coords) {
@@ -243,8 +278,19 @@ class EventController extends Controller
             }
         }
 
+        $photos = $request->file('photos', []);
+        unset($validated['photos']);
+
         $validated['status'] = 'pending';
         $event->update($validated);
+
+        $existingCount = $event->photos()->count();
+        foreach ($photos as $file) {
+            if ($existingCount >= 8) break;
+            $path = $file->store('events/' . $event->id, 'public');
+            \App\Models\Photo::create(['event_id' => $event->id, 'path' => $path]);
+            $existingCount++;
+        }
 
         return redirect()->route('my-events')
             ->with('success', 'Событие обновлено и отправлено на повторную проверку.');

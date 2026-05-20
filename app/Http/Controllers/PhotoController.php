@@ -2,64 +2,40 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Event;
 use App\Models\Photo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class PhotoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    /** Загрузка фото к событию */
+    public function store(Request $request, Event $event)
     {
-        //
+        $this->authorize('update', $event);
+
+        $request->validate([
+            'photos'   => ['required', 'array', 'max:8'],
+            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+
+        foreach ($request->file('photos') as $file) {
+            $path = $file->store('events/' . $event->id, 'public');
+            Photo::create(['event_id' => $event->id, 'path' => $path]);
+        }
+
+        return back()->with('success', 'Фотографии добавлены.');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Photo $photo)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Photo $photo)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Photo $photo)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
+    /** Удаление одного фото */
     public function destroy(Photo $photo)
     {
-        //
+        $this->authorize('update', $photo->event);
+
+        Storage::disk('public')->delete($photo->path);
+        $photo->delete();
+
+        return back()->with('success', 'Фото удалено.');
     }
 }
