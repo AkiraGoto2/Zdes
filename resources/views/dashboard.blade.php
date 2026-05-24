@@ -1,7 +1,6 @@
 <x-app-layout>
-<div class="max-w-[1100px] mx-auto px-6 py-8">
+<div class="max-w-[1100px] mx-auto px-4 sm:px-6 py-8">
 
-    {{-- Flash --}}
     @if(session('success'))
         <div class="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
             <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -10,30 +9,45 @@
     @endif
 
     {{-- Шапка профиля --}}
-    <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6 flex items-center gap-5">
-        <div class="w-16 h-16 rounded-2xl bg-[#4A40E0] flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-            {{ mb_strtoupper(mb_substr(Auth::user()->name, 0, 1)) }}
-        </div>
-        <div class="flex-1">
-            <h1 class="text-xl font-bold">{{ Auth::user()->name }} {{ Auth::user()->lastname }}</h1>
-            <p class="text-sm text-gray-500">{{ Auth::user()->email }} · {{ Auth::user()->tel }}</p>
-        </div>
-        <div class="flex gap-3">
-            <a href="{{ route('events.create') }}" class="bg-[#4A40E0] text-white rounded-xl px-5 py-2.5 text-sm font-semibold hover:bg-[#3d35c7] transition-colors">+ Создать событие</a>
-            <a href="{{ route('profile.edit') }}" class="border border-gray-200 text-gray-600 rounded-xl px-5 py-2.5 text-sm font-semibold hover:bg-gray-50 transition-colors">Настройки</a>
+    <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-6">
+        {{-- Обложка --}}
+        <div style="height:100px;background:linear-gradient(135deg,#4A40E0 0%,#7c6ef7 100%);"></div>
+
+        <div class="px-6 pb-6">
+            {{-- Аватар --}}
+            <div class="flex items-end justify-between -mt-10 mb-4">
+                <div class="w-20 h-20 rounded-2xl border-4 border-white bg-[#4A40E0] flex items-center justify-center text-white text-3xl font-bold shadow-md">
+                    {{ mb_strtoupper(mb_substr(Auth::user()->name, 0, 1)) }}
+                </div>
+
+                <div class="flex gap-2">
+                    <a href="{{ route('profile.edit') }}" class="border border-gray-200 text-gray-600 rounded-xl px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors">Настройки</a>
+                    <a href="{{ route('events.create') }}" class="bg-[#4A40E0] text-white rounded-xl px-4 py-2 text-sm font-semibold hover:bg-[#3d35c7] transition-colors">+ Событие</a>
+                </div>
+            </div>
+
+            <div>
+                <h1 class="text-xl font-bold">{{ Auth::user()->name }} {{ Auth::user()->lastname }}</h1>
+                <p class="text-sm text-gray-500 mt-0.5">{{ Auth::user()->email }}
+                    @if(Auth::user()->tel) · {{ Auth::user()->tel }} @endif
+                </p>
+                @if(Auth::user()->isAdmin())
+                    <span class="inline-block mt-2 bg-amber-50 text-amber-600 border border-amber-200 rounded-full text-xs font-semibold px-3 py-0.5">Администратор</span>
+                @endif
+            </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {{-- Левая колонка: статистика + уведомления --}}
+        {{-- Левая колонка --}}
         <div class="space-y-4">
 
             <!-- {{-- Статы --}}
             <div class="grid grid-cols-2 gap-3">
                 <div class="bg-white rounded-2xl border border-gray-200 p-4 text-center">
                     <div class="text-2xl font-bold text-[#4A40E0]">{{ $myEvents->count() }}</div>
-                    <div class="text-xs text-gray-500 mt-0.5">Создано событий</div>
+                    <div class="text-xs text-gray-500 mt-0.5">Создано</div>
                 </div>
                 <div class="bg-white rounded-2xl border border-gray-200 p-4 text-center">
                     <div class="text-2xl font-bold text-emerald-600">{{ $applications->count() }}</div>
@@ -65,7 +79,6 @@
                         </form>
                     @endif
                 </div>
-
                 @if($notifications->isEmpty())
                     <div class="px-4 py-6 text-center text-xs text-gray-400">Нет уведомлений</div>
                 @else
@@ -106,8 +119,8 @@
             </div>
         </div>
 
-        {{-- Правая колонка: мои события + записи --}}
-        <div class="col-span-2 space-y-6">
+        {{-- Правая колонка --}}
+        <div class="lg:col-span-2 space-y-6">
 
             {{-- Мои события --}}
             <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
@@ -122,8 +135,7 @@
                         @foreach($myEvents->take(5) as $event)
                             <div class="flex items-center gap-3 px-5 py-3">
                                 <div class="w-1 self-stretch rounded-full flex-shrink-0
-                                    {{ $event->status === 'approved' ? 'bg-emerald-400' : ($event->status === 'pending' ? 'bg-amber-400' : 'bg-red-400') }}">
-                                </div>
+                                    {{ $event->status === 'approved' ? 'bg-emerald-400' : ($event->status === 'pending' ? 'bg-amber-400' : 'bg-red-400') }}"></div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium truncate">{{ $event->name }}</p>
                                     <p class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($event->event_date)->translatedFormat('d M Y') }} · {{ $event->category->name }}</p>
@@ -152,18 +164,22 @@
                     <div class="divide-y divide-gray-50">
                         @foreach($applications as $app)
                             <div class="flex items-center gap-4 px-5 py-3">
-                                <div class="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
-                                    <svg class="w-4 h-4 text-[#4A40E0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <div class="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                    @if($app->event->photos->first())
+                                        <img src="{{ Storage::url($app->event->photos->first()->path) }}" class="w-full h-full object-cover" alt="">
+                                    @else
+                                        <svg class="w-4 h-4 text-[#4A40E0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    @endif
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-sm font-medium truncate">{{ $app->event->name }}</p>
-                                    <p class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($app->event->event_date)->translatedFormat('d M Y, H:i') }} · {{ $app->event->address }}</p>
+                                    <p class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($app->event->event_date)->translatedFormat('d M Y, H:i') }}</p>
                                 </div>
                                 <div class="flex items-center gap-2 flex-shrink-0">
-                                    <a href="{{ route('events.show', $app->event) }}" class="text-xs text-[#4A40E0] border border-indigo-200 rounded-lg px-3 py-1.5 hover:bg-indigo-50 transition-colors">Открыть</a>
+                                    <a href="{{ route('events.show', $app->event) }}" class="text-xs text-[#4A40E0] border border-indigo-200 rounded-lg px-3 py-1.5 hover:bg-indigo-50">Открыть</a>
                                     <form method="POST" action="{{ route('events.unapply', $app->event) }}" onsubmit="return confirm('Отменить запись?')">
                                         @csrf @method('DELETE')
-                                        <button class="text-xs text-red-500 border border-red-100 rounded-lg px-3 py-1.5 hover:bg-red-50 transition-colors">Отменить</button>
+                                        <button class="text-xs text-red-500 border border-red-100 rounded-lg px-3 py-1.5 hover:bg-red-50">Отменить</button>
                                     </form>
                                 </div>
                             </div>
@@ -171,7 +187,6 @@
                     </div>
                 @endif
             </div>
-
         </div>
     </div>
 </div>

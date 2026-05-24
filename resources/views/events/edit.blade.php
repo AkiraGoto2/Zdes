@@ -168,6 +168,41 @@
                 <input type="hidden" name="lng" id="lng" value="{{ old('lng', $event->lng) }}">
             </div>
 
+            {{-- Соцсети --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Ссылки на соцсети</label>
+                <div id="socials-list" class="space-y-2">
+                    @forelse($event->socials as $i => $social)
+                        <div class="flex gap-2 social-row">
+                            <select name="socials[{{ $i }}][platform]" class="w-36 border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                                @foreach(['VK','Telegram','Instagram','YouTube','TikTok','WhatsApp','Сайт'] as $p)
+                                    <option value="{{ $p }}" {{ $social->platform === $p ? 'selected' : '' }}>{{ $p }}</option>
+                                @endforeach
+                            </select>
+                            <input type="url" name="socials[{{ $i }}][url]" value="{{ $social->url }}"
+                                class="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                            <button type="button" onclick="this.closest('.social-row').remove()" class="text-gray-400 hover:text-red-500 px-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    @empty
+                        <div class="flex gap-2 social-row">
+                            <select name="socials[0][platform]" class="w-36 border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                                <option value="">Платформа</option>
+                                @foreach(['VK','Telegram','Instagram','YouTube','TikTok','WhatsApp','Сайт'] as $p)
+                                    <option value="{{ $p }}">{{ $p }}</option>
+                                @endforeach
+                            </select>
+                            <input type="url" name="socials[0][url]" placeholder="https://..." class="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                        </div>
+                    @endforelse
+                </div>
+                <button type="button" onclick="addSocial()" class="mt-2 text-sm text-[#4A40E0] hover:underline flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Добавить ссылку
+                </button>
+            </div>
+
             {{-- Управление фотографиями --}}
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Фотографии</label>
@@ -256,6 +291,28 @@
             };
             reader.readAsDataURL(file);
         });
+    }
+
+    // ── Соцсети ───────────────────────────────────────────────
+    let socialIdx = {{ $event->socials->count() ?: 1 }};
+    function addSocial() {
+        const list = document.getElementById('socials-list');
+        const div = document.createElement('div');
+        div.className = 'flex gap-2 social-row';
+        div.innerHTML = `
+            <select name="socials[${socialIdx}][platform]" class="w-36 border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                <option value="">Платформа</option>
+                <option value="VK">VK</option><option value="Telegram">Telegram</option>
+                <option value="Instagram">Instagram</option><option value="YouTube">YouTube</option>
+                <option value="TikTok">TikTok</option><option value="WhatsApp">WhatsApp</option>
+                <option value="Сайт">Сайт</option>
+            </select>
+            <input type="url" name="socials[${socialIdx}][url]" placeholder="https://..." class="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+            <button type="button" onclick="this.closest('.social-row').remove()" class="text-gray-400 hover:text-red-500 px-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>`;
+        list.appendChild(div);
+        socialIdx++;
     }
 
     // Flatpickr

@@ -14,9 +14,9 @@ class AdminController extends Controller
     {
         $tab = $request->get('tab', 'pending');
 
-        $pending  = Event::with(['user','category'])->where('status','pending')->orderBy('created_at','desc')->get();
-        $approved = Event::with(['user','category'])->where('status','approved')->orderBy('created_at','desc')->paginate(20);
-        $rejected = Event::with(['user','category'])->where('status','rejected')->orderBy('created_at','desc')->paginate(20);
+        $pending  = Event::with(['user','category','photos','socials'])->where('status','pending')->orderBy('created_at','desc')->get();
+        $approved = Event::with(['user','category','photos','socials'])->where('status','approved')->orderBy('created_at','desc')->paginate(20);
+        $rejected = Event::with(['user','category','photos','socials'])->where('status','rejected')->orderBy('created_at','desc')->paginate(20);
 
         $stats = [
             'pending'  => $pending->count(),

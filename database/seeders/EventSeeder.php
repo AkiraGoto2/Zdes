@@ -33,6 +33,16 @@ class EventSeeder extends Seeder
             ]
         );
 
+		$user3 = User::firstOrCreate(
+            ['email' => 'user@gmail.com'],
+            [
+                'name'     => 'User',
+                'lastname' => 'Userov',
+                'tel'      => '+7(999)999-99-99',
+                'password' => Hash::make('123456789'),
+            ]
+        );
+
         // Категории
         $music   = Category::where('name', 'Музыка и концерты')->first();
         $sport   = Category::where('name', 'Спорт и активный отдых')->first();

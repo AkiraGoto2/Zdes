@@ -120,6 +120,29 @@
                     </div>
                 @endif
 
+                {{-- Соцсети --}}
+                @if($event->socials->count())
+                    <div class="mb-4">
+                        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Ссылки</h2>
+                        <div class="flex flex-wrap gap-2">
+                            @foreach($event->socials as $social)
+                                @php
+                                    $icons = [
+                                        'vk' => '🔵', 'telegram' => '✈️', 'instagram' => '📷',
+                                        'youtube' => '▶️', 'tiktok' => '🎵', 'whatsapp' => '💬',
+                                    ];
+                                    $icon = $icons[mb_strtolower($social->platform)] ?? '🔗';
+                                @endphp
+                                <a href="{{ $social->url }}" target="_blank" rel="noopener"
+                                   class="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-sm font-medium text-gray-700 hover:border-[#4A40E0] hover:text-[#4A40E0] transition-colors">
+                                    <span>{{ $icon }}</span>
+                                    {{ $social->platform }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Организатор --}}
                 <div class="border-t pt-4 mt-4">
                     <p class="text-xs text-gray-400">Организатор: <span class="text-gray-600 font-medium">{{ $event->user->name }} {{ $event->user->lastname }}</span></p>
