@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'ГдеДвиж') }}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -34,7 +35,8 @@
             <div class="hidden md:flex items-center gap-3">
                 @auth
                     @if(Auth::user()->isAdmin())
-                        <a href="{{ route('admin.index') }}" class="text-[13px] font-medium text-[#475569] hover:text-amber-700 flex items-center gap-1.5">
+                        <a href="{{ route('admin.index') }}" class="text-[13px] font-medium text-amber-600 hover:text-amber-700 flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                             Модерация
                             @php $adminPending = \App\Models\Event::where('status','pending')->count(); @endphp
                             @if($adminPending > 0)

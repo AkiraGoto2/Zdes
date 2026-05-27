@@ -56,18 +56,19 @@ class EventController extends Controller
             $price = (!$e->price || $e->price == 0) ? 'Бесплатно'
                 : (number_format($e->price,0,'','  ') . ($e->price_to ? ' – '.number_format($e->price_to,0,'',' ') : '') . ' ₽');
             return [
-                'id'         => $e->id,
-                'name'       => $e->name,
-                'category'   => $e->category->name ?? '',
-                'category_id'=> $e->category_id,
-                'event_date' => \Carbon\Carbon::parse($e->event_date)->translatedFormat('d M, H:i'),
-                'address'    => $e->address,
-                'price'      => $price,
-                'age'        => $e->age,
-                'lat'        => (float)$e->lat,
-                'lng'        => (float)$e->lng,
-                'url'        => route('events.show', $e->id),
-                'cover'      => $e->photos->first() ? \Storage::url($e->photos->first()->path) : null,
+                'id'             => $e->id,
+                'name'           => $e->name,
+                'category'       => $e->category->name ?? '',
+                'category_id'    => $e->category_id,
+                'event_date'     => \Carbon\Carbon::parse($e->event_date)->translatedFormat('d M, H:i'),
+                'event_date_raw' => $e->event_date,
+                'address'        => $e->address,
+                'price'          => $price,
+                'age'            => $e->age,
+                'lat'            => (float) $e->lat,
+                'lng'            => (float) $e->lng,
+                'url'            => route('events.show', $e->id),
+                'cover'          => $e->photos->first() ? \Storage::url($e->photos->first()->path) : null,
             ];
         });
 

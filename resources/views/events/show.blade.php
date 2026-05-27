@@ -4,6 +4,7 @@
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <style>
             #event-map { height: 220px; border-radius: 12px; }
+            .leaflet-control-attribution { display: none !important; }
             /* Лайтбокс */
             #lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:9999; align-items:center; justify-content:center; }
             #lightbox.open { display:flex; }

@@ -174,5 +174,6 @@
             <div class="mt-10 flex justify-center">{{ $events->links() }}</div>
         @endif
     @endif
+	
 </div>
 </x-app-layout>
