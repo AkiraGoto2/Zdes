@@ -9,15 +9,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('events', function (Blueprint $table) {
-            // pending = на проверке, approved = одобрено, rejected = отклонено
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending')->after('address');
+            if (!Schema::hasColumn('events', 'event_date_end')) {
+                $table->dateTime('event_date_end')->nullable()->after('event_date');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('events', function (Blueprint $table) {
-            $table->dropColumn('status');
+            $table->dropColumn('event_date_end');
         });
     }
 };

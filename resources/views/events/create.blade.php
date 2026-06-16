@@ -1,5 +1,6 @@
 <x-app-layout>
     @push('styles')
+        <style>.leaflet-control-attribution{display:none!important;}</style>
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -49,7 +50,7 @@
         <form method="POST" action="{{ route('events.store') }}" enctype="multipart/form-data" class="space-y-6">
             @csrf
 
-            {{-- Название --}}
+            
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Название <span class="text-red-500">*</span></label>
                 <input type="text" name="name" value="{{ old('name') }}" required
@@ -57,7 +58,7 @@
                     placeholder="Например: Виниловый вечер в баре Vinyl">
             </div>
 
-            {{-- Категория + возраст --}}
+            
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Категория <span class="text-red-500">*</span></label>
@@ -78,47 +79,64 @@
                 </div>
             </div>
 
-            {{-- Дата --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Дата и время <span class="text-red-500">*</span></label>
-                <div class="relative">
-                    <input type="text" id="event_date_display" readonly
-                        class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0] cursor-pointer"
-                        placeholder="Выберите дату и время">
-                    <input type="hidden" name="event_date" id="event_date_hidden" value="{{ old('event_date') }}">
-                    <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Начало <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <input type="text" id="event_date_display" readonly
+                            class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0] cursor-pointer"
+                            placeholder="Дата и время начала">
+                        <input type="hidden" name="event_date" id="event_date_hidden" value="{{ old('event_date') }}">
+                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Окончание <span class="text-xs font-normal text-gray-400">— необязательно</span></label>
+                    <div class="relative">
+                        <input type="text" id="event_date_end_display" readonly
+                            class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0] cursor-pointer"
+                            placeholder="Дата и время окончания">
+                        <input type="hidden" name="event_date_end" id="event_date_end_hidden" value="{{ old('event_date_end') }}">
+                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
                 </div>
             </div>
 
-            {{-- Цена --}}
+            
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Вход</label>
+                <input type="hidden" name="price_type" id="price_type_field" value="{{ old('price_type', 'free') }}">
                 <div class="flex gap-2 mb-3">
                     <button type="button" id="tab-free"  class="price-tab border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium" onclick="setPriceType('free')">Бесплатно</button>
                     <button type="button" id="tab-fixed" class="price-tab border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium" onclick="setPriceType('fixed')">Фиксированная</button>
                     <button type="button" id="tab-range" class="price-tab border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium" onclick="setPriceType('range')">Диапазон</button>
                 </div>
                 <div id="price-fixed" class="hidden">
-                    <input type="number" name="price" value="{{ old('price') }}" min="0"
+                    <input type="number" name="price" id="price-fixed-input" value="{{ old('price') }}" min="0"
                         class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]" placeholder="Стоимость в ₽">
                 </div>
                 <div id="price-range" class="hidden">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">От ₽</label>
-                            <input type="number" name="price" value="{{ old('price') }}" min="0"
+                            <input type="number" id="price-from" name="price_range_from" value="{{ old('price') }}" min="0"
                                 class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]" placeholder="500">
                         </div>
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">До ₽</label>
-                            <input type="number" name="price_to" value="{{ old('price_to') }}" min="0"
+                            <input type="number" id="price-to" name="price_to" value="{{ old('price_to') }}" min="0"
                                 class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]" placeholder="1500">
                         </div>
                     </div>
+                    <p id="price-range-error" class="hidden text-xs text-red-500 mt-1">«До» должно быть больше или равно «От»</p>
                 </div>
+                @error('price_to')
+                    <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
-            {{-- Описание --}}
+            
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Описание <span class="text-red-500">*</span></label>
                 <textarea name="description" rows="4" required minlength="20"
@@ -126,7 +144,7 @@
                     placeholder="Расскажите подробнее о событии...">{{ old('description') }}</textarea>
             </div>
 
-            {{-- Адрес с автодополнением --}}
+            
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                     Адрес <span class="text-red-500">*</span>
@@ -141,7 +159,7 @@
                 </div>
             </div>
 
-            {{-- Карта --}}
+            
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <label class="text-sm font-medium text-gray-700">Место на карте</label>
@@ -150,13 +168,13 @@
 
                 <div id="pick-map" class="mb-3 border border-gray-200"></div>
 
-                {{-- Статус метки --}}
+                
                 <div id="map-status" class="flex items-center gap-2 text-xs text-gray-400 mb-3">
                     <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                     <span id="map-status-text">Метка не поставлена</span>
                 </div>
 
-                {{-- Галочка "адрес отличается" --}}
+                
                 <div id="override-block" class="hidden bg-gray-50 rounded-xl p-3 border border-gray-200">
                     <label class="flex items-start gap-2.5 cursor-pointer">
                         <input type="checkbox" id="address-override" name="address_override" value="1"
@@ -179,7 +197,39 @@
                 <input type="hidden" name="lng" id="lng" value="{{ old('lng') }}">
             </div>
 
-            {{-- Фотографии --}}
+            
+            <div>
+            {{-- Контакты для связи --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Контакты для связи <span class="text-xs font-normal text-gray-400">— телефон, email, Telegram, VK или любой другой способ</span></label>
+                <input type="text" name="contact_phone" value="{{ old('contact_phone') }}"
+                    class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]"
+                    placeholder="Например: +7 999 000-00-00, @username, email@mail.ru">
+            </div>
+
+                <label class="block text-sm font-medium text-gray-700 mb-2">Ссылки на соцсети</label>
+                <div id="socials-list" class="space-y-2">
+                    <div class="flex gap-2 social-row">
+                        <select name="socials[0][platform]" class="w-36 border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                            <option value="">Платформа</option>
+                            <option value="VK">VK</option>
+                            <option value="Telegram">Telegram</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="YouTube">YouTube</option>
+                            <option value="TikTok">TikTok</option>
+                            <option value="WhatsApp">WhatsApp</option>
+                            <option value="Сайт">Сайт</option>
+                        </select>
+                        <input type="url" name="socials[0][url]" placeholder="https://..." class="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                    </div>
+                </div>
+                <button type="button" onclick="addSocial()" class="mt-2 text-sm text-[#4A40E0] hover:underline flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Добавить ссылку
+                </button>
+            </div>
+
+            
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                     Фотографии
@@ -213,14 +263,36 @@
 
     @push('scripts')
     <script>
-    // ── Превью фото ───────────────────────────────────────────
+    
+    let socialIdx = 1;
+    function addSocial() {
+        const list = document.getElementById('socials-list');
+        const div = document.createElement('div');
+        div.className = 'flex gap-2 social-row';
+        div.innerHTML = `
+            <select name="socials[${socialIdx}][platform]" class="w-36 border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                <option value="">Платформа</option>
+                <option value="VK">VK</option><option value="Telegram">Telegram</option>
+                <option value="Instagram">Instagram</option><option value="YouTube">YouTube</option>
+                <option value="TikTok">TikTok</option><option value="WhatsApp">WhatsApp</option>
+                <option value="Сайт">Сайт</option>
+            </select>
+            <input type="url" name="socials[${socialIdx}][url]" placeholder="https://..." class="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+            <button type="button" onclick="this.closest('.social-row').remove()" class="text-gray-400 hover:text-red-500 px-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>`;
+        list.appendChild(div);
+        socialIdx++;
+    }
+
+    
     const photosInput   = document.getElementById('photos-input');
     const photoPreview  = document.getElementById('photo-preview');
     const photoDrop     = document.getElementById('photo-drop');
 
     photosInput.addEventListener('change', renderPreviews);
 
-    // Drag & drop
+    
     photoDrop.addEventListener('dragover', e => { e.preventDefault(); photoDrop.classList.add('border-[#4A40E0]','bg-indigo-50/30'); });
     photoDrop.addEventListener('dragleave', () => { photoDrop.classList.remove('border-[#4A40E0]','bg-indigo-50/30'); });
     photoDrop.addEventListener('drop', e => {
@@ -252,8 +324,8 @@
         });
     }
 
-    // ── Flatpickr ─────────────────────────────────────────────
-    flatpickr("#event_date_display", {
+    
+    let startPicker = flatpickr("#event_date_display", {
         locale: "ru", enableTime: true, dateFormat: "d.m.Y H:i",
         minDate: "today", time_24hr: true,
         @if(old('event_date')) defaultDate: "{{ old('event_date') }}", @endif
@@ -262,11 +334,26 @@
             const d = dates[0], p = n => String(n).padStart(2,'0');
             document.getElementById('event_date_hidden').value =
                 `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:00`;
+            // Обновляем минимальную дату окончания
+            endPicker.set('minDate', dates[0]);
         }
     });
 
-    // ── Цена ─────────────────────────────────────────────────
+    let endPicker = flatpickr("#event_date_end_display", {
+        locale: "ru", enableTime: true, dateFormat: "d.m.Y H:i",
+        minDate: "today", time_24hr: true,
+        @if(old('event_date_end')) defaultDate: "{{ old('event_date_end') }}", @endif
+        onChange(dates) {
+            if (!dates[0]) return;
+            const d = dates[0], p = n => String(n).padStart(2,'0');
+            document.getElementById('event_date_end_hidden').value =
+                `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:00`;
+        }
+    });
+
+    
     function setPriceType(type) {
+        document.getElementById('price_type_field').value = type;
         ['price-fixed','price-range'].forEach(id => document.getElementById(id).classList.add('hidden'));
         ['tab-free','tab-fixed','tab-range'].forEach(id => document.getElementById(id).classList.remove('active'));
         if (type === 'fixed') {
@@ -280,19 +367,35 @@
             document.querySelectorAll('[name="price"],[name="price_to"]').forEach(el => el.value = '');
         }
     }
-    @if(old('price_to')) setPriceType('range');
+    @if(old('price_type') === 'range') setPriceType('range');
+    @elseif(old('price_type') === 'fixed') setPriceType('fixed');
+    @elseif(old('price_to')) setPriceType('range');
     @elseif(old('price')) setPriceType('fixed');
     @else setPriceType('free');
     @endif
 
-    // ── Карта ─────────────────────────────────────────────────
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const from = document.getElementById('price-from');
+        const to   = document.getElementById('price-to');
+        const err  = document.getElementById('price-range-error');
+        if (from && to && from.value && to.value && parseInt(to.value) < parseInt(from.value)) {
+            e.preventDefault();
+            err.classList.remove('hidden');
+            to.focus();
+            return false;
+        }
+        if (err) err.classList.add('hidden');
+    });
+
+
+    
     const map = L.map('pick-map', { center: [55.1540, 61.4026], zoom: 12, zoomControl: true });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+        attribution: ''
     }).addTo(map);
 
     let marker = null;
-    let reverseGeocoding = false; // флаг: идёт ли запрос обратного геокодера
+    let reverseGeocoding = false; 
 
     function setMarker(lat, lng) {
         if (marker) marker.remove();
@@ -308,7 +411,7 @@
         el.className = 'flex items-center gap-2 text-xs mb-3 ' + (ok ? 'text-emerald-600' : 'text-gray-400');
     }
 
-    // Восстановить old значения
+    
     const oldLat = "{{ old('lat') }}", oldLng = "{{ old('lng') }}";
     if (oldLat && oldLng) {
         setMarker(parseFloat(oldLat), parseFloat(oldLng));
@@ -317,7 +420,7 @@
         document.getElementById('override-block').classList.remove('hidden');
     }
 
-    // Клик по карте → обратное геокодирование → заполнить адрес
+    
     map.on('click', async function(e) {
         const { lat, lng } = e.latlng;
         setMarker(lat, lng);
@@ -334,7 +437,7 @@
                 const a = data.address;
                 const parts = [a.road, a.house_number, a.city || a.town || a.village].filter(Boolean);
                 const pretty = parts.join(', ') || data.display_name.split(',').slice(0,3).join(',').trim();
-                // Заполняем поле адреса только если пользователь не редактировал его вручную
+                
                 const addrInput = document.getElementById('address-input');
                 if (!addrInput.dataset.manualEdit) {
                     addrInput.value = pretty;
@@ -346,13 +449,13 @@
         }
     });
 
-    // ── Автодополнение ────────────────────────────────────────
+    
     const addrInput  = document.getElementById('address-input');
     const suggestBox = document.getElementById('suggestions');
     let suggestTimer = null;
 
     addrInput.addEventListener('input', function() {
-        this.dataset.manualEdit = '1'; // пользователь печатает — помечаем
+        this.dataset.manualEdit = '1'; 
         clearTimeout(suggestTimer);
         const q = this.value.trim();
         if (q.length < 3) { suggestBox.classList.add('hidden'); return; }
@@ -389,7 +492,7 @@
                     const label = el.dataset.label;
 
                     addrInput.value = label;
-                    addrInput.dataset.manualEdit = ''; // сбрасываем — адрес выбран из подсказки
+                    addrInput.dataset.manualEdit = ''; 
                     suggestBox.classList.add('hidden');
                     setMarker(lat, lng);
                     setStatus(label, true);
@@ -401,14 +504,14 @@
         }
     }
 
-    // Закрыть подсказки при клике вне
+    
     document.addEventListener('click', e => {
         if (!addrInput.contains(e.target) && !suggestBox.contains(e.target)) {
             suggestBox.classList.add('hidden');
         }
     });
 
-    // ── Галочка «адрес отличается» ───────────────────────────
+    
     document.getElementById('address-override').addEventListener('change', function() {
         document.getElementById('display-address-block').classList.toggle('hidden', !this.checked);
     });

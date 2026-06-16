@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Photo;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class PhotoController extends Controller
 {
-    /** Загрузка фото к событию */
+    use AuthorizesRequests;
+    
     public function store(Request $request, Event $event)
     {
         $this->authorize('update', $event);
@@ -28,7 +30,7 @@ class PhotoController extends Controller
         return back()->with('success', 'Фотографии добавлены.');
     }
 
-    /** Удаление одного фото */
+    
     public function destroy(Photo $photo)
     {
         $this->authorize('update', $photo->event);

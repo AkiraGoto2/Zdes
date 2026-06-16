@@ -1,5 +1,6 @@
 <x-app-layout>
     @push('styles')
+        <style>.leaflet-control-attribution{display:none!important;}</style>
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -73,38 +74,53 @@
                 </div>
             </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Дата и время <span class="text-red-500">*</span></label>
-                <div class="relative">
-                    <input type="text" id="event_date_display" readonly
-                        class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0] cursor-pointer">
-                    <input type="hidden" name="event_date" id="event_date_hidden"
-                        value="{{ old('event_date', \Carbon\Carbon::parse($event->event_date)->format('Y-m-d H:i:s')) }}">
-                    <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Начало <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <input type="text" id="event_date_display" readonly
+                            class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0] cursor-pointer">
+                        <input type="hidden" name="event_date" id="event_date_hidden"
+                            value="{{ old('event_date', \Carbon\Carbon::parse($event->event_date)->format('Y-m-d H:i:s')) }}">
+                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Окончание <span class="text-xs font-normal text-gray-400">— необязательно</span></label>
+                    <div class="relative">
+                        <input type="text" id="event_date_end_display" readonly
+                            class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0] cursor-pointer"
+                            placeholder="Дата и время окончания">
+                        <input type="hidden" name="event_date_end" id="event_date_end_hidden"
+                            value="{{ old('event_date_end', $event->event_date_end ? \Carbon\Carbon::parse($event->event_date_end)->format('Y-m-d H:i:s') : '') }}">
+                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
                 </div>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Вход</label>
+                <input type="hidden" name="price_type" id="price_type_field"
+                    value="{{ old('price_type', $event->price_to ? 'range' : (!is_null($event->price) ? 'fixed' : 'free')) }}">
                 <div class="flex gap-2 mb-3">
                     <button type="button" id="tab-free"  class="price-tab border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium" onclick="setPriceType('free')">Бесплатно</button>
                     <button type="button" id="tab-fixed" class="price-tab border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium" onclick="setPriceType('fixed')">Фиксированная</button>
                     <button type="button" id="tab-range" class="price-tab border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium" onclick="setPriceType('range')">Диапазон</button>
                 </div>
                 <div id="price-fixed" class="hidden">
-                    <input type="number" name="price" value="{{ old('price', ($event->price && !$event->price_to) ? $event->price : '') }}" min="0"
+                    <input type="number" name="price" id="price-fixed-input" value="{{ old('price', ($event->price && !$event->price_to) ? $event->price : '') }}" min="0"
                         class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]" placeholder="Стоимость в ₽">
                 </div>
                 <div id="price-range" class="hidden">
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">От ₽</label>
-                            <input type="number" name="price" value="{{ old('price', $event->price_to ? $event->price : '') }}" min="0"
+                            <input type="number" name="price_range_from" value="{{ old('price', $event->price_to ? $event->price : '') }}" min="0"
                                 class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]" placeholder="500">
                         </div>
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">До ₽</label>
-                            <input type="number" name="price_to" value="{{ old('price_to', $event->price_to) }}" min="0"
+                            <input type="number" id="price-to" name="price_to" value="{{ old('price_to', $event->price_to) }}" min="0"
                                 class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]" placeholder="1500">
                         </div>
                     </div>
@@ -117,7 +133,7 @@
                     class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0] resize-none">{{ old('description', $event->description) }}</textarea>
             </div>
 
-            {{-- Адрес с автодополнением --}}
+            
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                     Адрес <span class="text-red-500">*</span>
@@ -132,7 +148,7 @@
                 </div>
             </div>
 
-            {{-- Карта --}}
+            
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <label class="text-sm font-medium text-gray-700">Место на карте</label>
@@ -168,11 +184,54 @@
                 <input type="hidden" name="lng" id="lng" value="{{ old('lng', $event->lng) }}">
             </div>
 
-            {{-- Управление фотографиями --}}
+            
+            <div>
+            {{-- Контакты для связи --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Контакты для связи <span class="text-xs font-normal text-gray-400">— телефон, email, Telegram, VK или любой другой способ</span></label>
+                <input type="text" name="contact_phone" value="{{ old('contact_phone', $event->contact_phone) }}"
+                    class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]"
+                    placeholder="Например: +7 999 000-00-00, @username, email@mail.ru">
+            </div>
+
+                <label class="block text-sm font-medium text-gray-700 mb-2">Ссылки на соцсети</label>
+                <div id="socials-list" class="space-y-2">
+                    @forelse($event->socials as $i => $social)
+                        <div class="flex gap-2 social-row">
+                            <select name="socials[{{ $i }}][platform]" class="w-36 border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                                @foreach(['VK','Telegram','Instagram','YouTube','TikTok','WhatsApp','Сайт'] as $p)
+                                    <option value="{{ $p }}" {{ $social->platform === $p ? 'selected' : '' }}>{{ $p }}</option>
+                                @endforeach
+                            </select>
+                            <input type="url" name="socials[{{ $i }}][url]" value="{{ $social->url }}"
+                                class="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                            <button type="button" onclick="this.closest('.social-row').remove()" class="text-gray-400 hover:text-red-500 px-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    @empty
+                        <div class="flex gap-2 social-row">
+                            <select name="socials[0][platform]" class="w-36 border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                                <option value="">Платформа</option>
+                                @foreach(['VK','Telegram','Instagram','YouTube','TikTok','WhatsApp','Сайт'] as $p)
+                                    <option value="{{ $p }}">{{ $p }}</option>
+                                @endforeach
+                            </select>
+                            <input type="url" name="socials[0][url]" placeholder="https://..." class="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                        </div>
+                    @endforelse
+                </div>
+                <button type="button" onclick="addSocial()" class="mt-2 text-sm text-[#4A40E0] hover:underline flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Добавить ссылку
+                </button>
+            </div>
+
+            
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Фотографии</label>
 
-                {{-- Существующие фото --}}
+                
                 @if($event->photos->count())
                     <div class="grid grid-cols-4 gap-2 mb-3">
                         @foreach($event->photos as $photo)
@@ -181,21 +240,18 @@
                                 @if($loop->first)
                                     <span style="position:absolute;bottom:4px;left:4px;background:rgba(74,64,224,.85);color:white;font-size:10px;font-weight:600;border-radius:5px;padding:1px 6px;">Обложка</span>
                                 @endif
-                                <form method="POST" action="{{ route('photos.destroy', $photo) }}"
+                                <button type="button"
+                                    onclick="deletePhoto('{{ route('photos.destroy', $photo) }}')"
                                     style="position:absolute;top:4px;right:4px;"
-                                    onsubmit="return confirm('Удалить фото?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit"
-                                        class="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    </button>
-                                </form>
+                                    class="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
                             </div>
                         @endforeach
                     </div>
                 @endif
 
-                {{-- Загрузить новые --}}
+                
                 @if($event->photos->count() < 8)
                     <div id="photo-drop"
                         class="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center cursor-pointer hover:border-[#4A40E0] hover:bg-indigo-50/30 transition-colors"
@@ -220,7 +276,7 @@
 
     @push('scripts')
     <script>
-    // ── Превью новых фото ─────────────────────────────────────
+    
     const photosInput  = document.getElementById('photos-input');
     const photoPreview = document.getElementById('photo-preview');
     const photoDrop    = document.getElementById('photo-drop');
@@ -258,8 +314,30 @@
         });
     }
 
-    // Flatpickr
-    flatpickr("#event_date_display", {
+    
+    let socialIdx = {{ $event->socials->count() ?: 1 }};
+    function addSocial() {
+        const list = document.getElementById('socials-list');
+        const div = document.createElement('div');
+        div.className = 'flex gap-2 social-row';
+        div.innerHTML = `
+            <select name="socials[${socialIdx}][platform]" class="w-36 border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                <option value="">Платформа</option>
+                <option value="VK">VK</option><option value="Telegram">Telegram</option>
+                <option value="Instagram">Instagram</option><option value="YouTube">YouTube</option>
+                <option value="TikTok">TikTok</option><option value="WhatsApp">WhatsApp</option>
+                <option value="Сайт">Сайт</option>
+            </select>
+            <input type="url" name="socials[${socialIdx}][url]" placeholder="https://..." class="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+            <button type="button" onclick="this.closest('.social-row').remove()" class="text-gray-400 hover:text-red-500 px-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>`;
+        list.appendChild(div);
+        socialIdx++;
+    }
+
+    
+    let startPickerEdit = flatpickr("#event_date_display", {
         locale: "ru", enableTime: true, dateFormat: "d.m.Y H:i", time_24hr: true,
         defaultDate: "{{ \Carbon\Carbon::parse($event->event_date)->format('Y-m-d H:i') }}",
         onChange(dates) {
@@ -267,12 +345,25 @@
             const d = dates[0], p = n => String(n).padStart(2,'0');
             document.getElementById('event_date_hidden').value =
                 `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:00`;
+            endPickerEdit.set('minDate', dates[0]);
         }
     });
     document.getElementById('event_date_hidden').value = '{{ \Carbon\Carbon::parse($event->event_date)->format('Y-m-d H:i:s') }}';
 
-    // Цена
+    let endPickerEdit = flatpickr("#event_date_end_display", {
+        locale: "ru", enableTime: true, dateFormat: "d.m.Y H:i", time_24hr: true,
+        @if($event->event_date_end) defaultDate: "{{ \Carbon\Carbon::parse($event->event_date_end)->format('Y-m-d H:i') }}", @endif
+        onChange(dates) {
+            if (!dates[0]) return;
+            const d = dates[0], p = n => String(n).padStart(2,'0');
+            document.getElementById('event_date_end_hidden').value =
+                `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:00`;
+        }
+    });
+
+    
     function setPriceType(type) {
+        document.getElementById('price_type_field').value = type;
         ['price-fixed','price-range'].forEach(id => document.getElementById(id).classList.add('hidden'));
         ['tab-free','tab-fixed','tab-range'].forEach(id => document.getElementById(id).classList.remove('active'));
         if (type === 'fixed') {
@@ -286,15 +377,26 @@
         }
     }
     @if($event->price_to) setPriceType('range');
-    @elseif($event->price) setPriceType('fixed');
+    @elseif(!is_null($event->price)) setPriceType('fixed');
     @else setPriceType('free');
     @endif
 
-    // Карта
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const from = document.querySelector('[name="price"]');
+        const to   = document.getElementById('price-to');
+        if (from && to && from.value && to.value && parseInt(to.value) < parseInt(from.value)) {
+            e.preventDefault();
+            alert('Цена «До» должна быть не меньше цены «От»');
+            to.focus();
+        }
+    });
+
+
+    
     const initLat = {{ $event->lat ?? 55.1540 }};
     const initLng = {{ $event->lng ?? 61.4026 }};
     const map = L.map('pick-map', { center: [initLat, initLng], zoom: {{ ($event->lat && $event->lng) ? 15 : 12 }}, zoomControl: true });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '' }).addTo(map);
 
     let marker = {{ ($event->lat && $event->lng) ? 'true' : 'false' }}
         ? L.marker([initLat, initLng]).addTo(map) : null;
@@ -330,7 +432,7 @@
         } catch(e) { setStatus(`${lat.toFixed(5)}, ${lng.toFixed(5)}`, true); }
     });
 
-    // Автодополнение
+    
     const addrInput  = document.getElementById('address-input');
     const suggestBox = document.getElementById('suggestions');
     let suggestTimer = null;
@@ -381,4 +483,15 @@
     });
     </script>
     @endpush
+<form id="photo-delete-form" method="POST" style="display:none;">
+    @csrf
+    @method('DELETE')
+</form>
+<script>
+function deletePhoto(url) {
+    const f = document.getElementById('photo-delete-form');
+    f.action = url;
+    f.submit();
+}
+</script>
 </x-app-layout>

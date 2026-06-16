@@ -10,15 +10,15 @@ use Illuminate\Support\Facades\Auth;
 
 class ApplicationController extends Controller
 {
-    /** Записаться на событие */
+    
     public function store(Event $event)
     {
-        // Нельзя записаться на своё же событие
+        
         if ($event->user_id === Auth::id()) {
             return back()->with('error', 'Вы не можете записаться на своё событие.');
         }
 
-        // Уже записан?
+        
         $exists = Application::where('user_id', Auth::id())
             ->where('event_id', $event->id)
             ->where('status', '!=', 'cancelled')
@@ -34,7 +34,7 @@ class ApplicationController extends Controller
             'status'   => 'published',
         ]);
 
-        // Уведомление организатору
+        
         Notification::create([
             'user_id'    => $event->user_id,
             'type'       => 'new_application',
@@ -45,7 +45,7 @@ class ApplicationController extends Controller
         return back()->with('success', 'Вы успешно записались на событие!');
     }
 
-    /** Отменить запись */
+    
     public function destroy(Event $event)
     {
         Application::where('user_id', Auth::id())

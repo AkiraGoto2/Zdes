@@ -3,7 +3,7 @@
 
         <div class="w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl flex">
 
-            {{-- Левая панель --}}
+            
             <div class="hidden lg:flex lg:w-5/12 flex-col justify-between p-10 text-white relative overflow-hidden"
                 style="background: linear-gradient(145deg, #3730d4 0%, #4f46e5 60%, #6d28d9 100%);">
 
@@ -37,7 +37,7 @@
                 </div>
             </div>
 
-            {{-- Правая часть (форма) --}}
+            
             <div class="flex-1 bg-white flex items-center justify-center p-8">
 
                 <form method="POST" action="{{ route('register') }}" class="w-full max-w-sm space-y-4">
@@ -45,7 +45,7 @@
 
                     <h2 class="text-2xl font-bold">Создать аккаунт</h2>
 
-                    {{-- Имя + фамилия --}}
+                    
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <x-input-label for="name" value="Имя"/>
@@ -60,45 +60,57 @@
                         </div>
                     </div>
 
-                    {{-- Телефон --}}
+                    
                     <div>
                         <x-input-label for="tel" value="Телефон"/>
-                        {{-- Исправлено: добавлен закрывающий слэш --}}
+                        
                         <x-tel id="tel" name="tel"
                             class="w-full border-gray-300 rounded-md shadow-sm"
                             type="text" :value="old('tel')" /> 
                         <x-input-error :messages="$errors->get('tel')" class="mt-2" />
                     </div>
 
-                    {{-- Email --}}
+                    
                     <div>
                         <x-input-label for="email" value="Email"/>
                         <x-text-input id="email" name="email" type="email" class="w-full" :value="old('email')" required autocomplete="username" />
                         <x-input-error :messages="$errors->get('email')" class="mt-2" />
                     </div>
 
-                    {{-- Пароль --}}
                     <div>
                         <x-input-label for="password" value="Пароль"/>
-                        <x-text-input id="password" name="password" type="password" class="w-full" required />
+                        <div class="relative">
+                            <x-text-input id="password" name="password" type="password" class="w-full pr-10" required />
+                            <button type="button" onclick="togglePass('password','eye-pass')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <svg id="eye-pass" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
                         <x-input-error :messages="$errors->get('password')" />
                     </div>
 
-                    {{-- Подтверждение --}}
                     <div>
                         <x-input-label for="password_confirmation" value="Подтвердите пароль"/>
-                        <x-text-input id="password_confirmation" name="password_confirmation" type="password" class="w-full" required />
+                        <div class="relative">
+                            <x-text-input id="password_confirmation" name="password_confirmation" type="password" class="w-full pr-10" required />
+                            <button type="button" onclick="togglePass('password_confirmation','eye-pass2')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <svg id="eye-pass2" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
-                    {{-- Кнопка --}}
+                    
                     <button type="submit"
                         class="w-full py-2 rounded-xl text-white font-semibold"
                         style="background: linear-gradient(135deg, #4338ca 0%, #5b21b6 100%)">
                         Создать аккаунт →
                     </button>
-
-                    {{-- Логин --}}
-                    <p class="text-sm text-center">
+<p class="text-sm text-center">
                         Уже есть аккаунт?
                         <a href="{{ route('login') }}" class="text-indigo-600 font-semibold">
                             Войти
@@ -122,4 +134,16 @@
         100% { background-position: 100% 100%; }
     }
     </style>
+
+<script>
+function togglePass(fieldId, eyeId) {
+    const field = document.getElementById(fieldId);
+    const eye = document.getElementById(eyeId);
+    const isHidden = field.type === 'password';
+    field.type = isHidden ? 'text' : 'password';
+    eye.innerHTML = isHidden
+        ? '<path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>'
+        : '<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+}
+</script>
 </x-guest-layout>

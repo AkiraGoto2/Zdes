@@ -9,14 +9,14 @@ use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
-    /** Панель модерации */
+    
     public function index(Request $request)
     {
         $tab = $request->get('tab', 'pending');
 
-        $pending  = Event::with(['user','category'])->where('status','pending')->orderBy('created_at','desc')->get();
-        $approved = Event::with(['user','category'])->where('status','approved')->orderBy('created_at','desc')->paginate(20);
-        $rejected = Event::with(['user','category'])->where('status','rejected')->orderBy('created_at','desc')->paginate(20);
+        $pending  = Event::with(['user','category','photos','socials'])->where('status','pending')->orderBy('created_at','desc')->get();
+        $approved = Event::with(['user','category','photos','socials'])->where('status','approved')->orderBy('created_at','desc')->paginate(20);
+        $rejected = Event::with(['user','category','photos','socials'])->where('status','rejected')->orderBy('created_at','desc')->paginate(20);
 
         $stats = [
             'pending'  => $pending->count(),
@@ -28,12 +28,12 @@ class AdminController extends Controller
         return view('admin.index', compact('pending','approved','rejected','stats','tab'));
     }
 
-    /** Одобрить событие */
+    
     public function approve(Event $event)
     {
         $event->update(['status' => 'approved']);
 
-        // Уведомление организатору
+        
         Notification::create([
             'user_id'    => $event->user_id,
             'type'       => 'event_approved',
@@ -44,7 +44,7 @@ class AdminController extends Controller
         return back()->with('success', "Событие «{$event->name}» одобрено.");
     }
 
-    /** Отклонить событие */
+    
     public function reject(Request $request, Event $event)
     {
         $event->update(['status' => 'rejected']);

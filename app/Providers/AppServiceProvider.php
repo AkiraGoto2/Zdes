@@ -15,7 +15,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Event::class, EventPolicy::class);
 
-        // Русская локаль для Carbon (translatedFormat)
+        
         \Carbon\Carbon::setLocale('ru');
+        \Illuminate\Pagination\Paginator::defaultView('pagination.custom');
     }
 }

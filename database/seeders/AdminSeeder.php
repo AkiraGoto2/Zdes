@@ -11,12 +11,12 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         User::firstOrCreate(
-            ['email' => 'admin@gdedvizh.ru'],
+            ['email' => 'admin@gmail.com'],
             [
                 'name'     => 'Админ',
                 'lastname' => 'Системный',
                 'tel'      => '+70000000000',
-                'password' => Hash::make('admin123'),
+                'password' => Hash::make('123456789'),
                 'role'     => 'admin',
             ]
         );

@@ -11,9 +11,9 @@ return new class extends Migration
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('type'); // event_approved, event_rejected, new_application
+            $table->string('type'); 
             $table->text('message');
-            $table->unsignedBigInteger('related_id')->nullable(); // event_id или application_id
+            $table->unsignedBigInteger('related_id')->nullable(); 
             $table->boolean('is_read')->default(false);
             $table->timestamps();
         });

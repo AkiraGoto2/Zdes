@@ -6,24 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+    
     public function up(): void
     {
         Schema::create('applications', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-			$table->foreignId('user_id')->constrained();
+			$table->foreignId('user_id')->constrained()->cascadeOnDelete();
 			$table->foreignId('event_id')->constrained();
 			$table->enum ('status', ['draft', 'published', 'cancelled'])->default('draft');
 			
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
+    
     public function down(): void
     {
         Schema::dropIfExists('applications');

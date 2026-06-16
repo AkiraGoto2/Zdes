@@ -8,7 +8,7 @@
 
         <div class="w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl flex">
 
-            {{-- Левая панель --}}
+            
             <div class="hidden lg:flex lg:w-5/12 flex-col justify-between p-10 text-white relative overflow-hidden"
                  style="background: linear-gradient(145deg, #3730d4 0%, #4f46e5 60%, #6d28d9 100%);">
 
@@ -40,7 +40,7 @@
                 </div>
             </div>
 
-            {{-- Правая часть --}}
+            
             <div class="flex-1 bg-white flex items-center justify-center p-8 lg:p-12">
 
                 <form method="POST" action="{{ route('login') }}" class="w-full max-w-sm space-y-5">
@@ -51,10 +51,10 @@
                         <p class="text-gray-500 text-sm">Войдите в аккаунт</p>
                     </div>
 
-                    {{-- Статус --}}
+                    
                     <x-auth-session-status :status="session('status')" />
 
-                    {{-- Email --}}
+                    
                     <div>
                         <x-input-label for="email" value="Email" />
                         <x-text-input id="email"
@@ -66,7 +66,7 @@
                         <x-input-error :messages="$errors->get('email')" />
                     </div>
 
-                    {{-- Пароль --}}
+                    
                     <div>
                         <div class="flex justify-between">
                             <x-input-label for="password" value="Пароль" />
@@ -78,42 +78,35 @@
                             @endif
                         </div>
 
-                        <x-text-input id="password"
-                                      name="password"
-                                      type="password"
-                                      class="w-full mt-1"
-                                      required />
+                        <div class="relative mt-1">
+                            <x-text-input id="password"
+                                          name="password"
+                                          type="password"
+                                          class="w-full pr-10"
+                                          required />
+                            <button type="button" onclick="togglePass('password','eye-login')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <svg id="eye-login" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
                         <x-input-error :messages="$errors->get('password')" />
                     </div>
 
-                    {{-- Запомнить --}}
+                    
                     <label class="flex items-center gap-2 text-sm text-gray-600">
                         <input type="checkbox" name="remember" class="rounded border-gray-300">
                         Запомнить меня
                     </label>
 
-                    {{-- Кнопка --}}
+                    
                     <button type="submit"
                             class="w-full py-2 rounded-xl text-white font-semibold"
                             style="background: linear-gradient(135deg, #4338ca 0%, #5b21b6 100%)">
                         Войти →
                     </button>
-
-                    {{-- Разделитель --}}
-                    <div class="text-center text-xs text-gray-400">или</div>
-
-                    {{-- Соц кнопки (пока заглушка) --}}
-                    <div class="grid grid-cols-2 gap-3">
-                        <button disabled class="h-10 border rounded-xl text-sm opacity-50">
-                            Telegram
-                        </button>
-                        <button disabled class="h-10 border rounded-xl text-sm opacity-50">
-                            VK
-                        </button>
-                    </div>
-
-                    {{-- Регистрация --}}
-                    <p class="text-center text-sm text-gray-500">
+<p class="text-center text-sm text-gray-500">
                         Нет аккаунта?
                         <a href="{{ route('register') }}" class="text-indigo-600 font-semibold">
                             Зарегистрироваться
@@ -137,4 +130,16 @@
         100% { background-position: 100% 100%; }
     }
     </style>
+
+<script>
+function togglePass(fieldId, eyeId) {
+    const field = document.getElementById(fieldId);
+    const eye = document.getElementById(eyeId);
+    const isHidden = field.type === 'password';
+    field.type = isHidden ? 'text' : 'password';
+    eye.innerHTML = isHidden
+        ? '<path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>'
+        : '<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+}
+</script>
 </x-guest-layout>
