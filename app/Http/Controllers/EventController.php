@@ -253,8 +253,10 @@ class EventController extends Controller
         $validated = $request->validate([
             'name'        => ['required','string','max:255'],
             'category_id' => ['required','exists:categories,id'],
-            'event_date'     => ['required','date'],
-            'event_date_end' => ['nullable','date'],
+            'event_date_day'      => ['required','date_format:Y-m-d'],
+            'event_date_time'     => ['required','date_format:H:i'],
+            'event_date_end_day'  => ['nullable','date_format:Y-m-d'],
+            'event_date_end_time' => ['nullable','date_format:H:i'],
             'age'         => ['required','in:0+,6+,12+,16+,18+'],
             'description' => ['required','string','min:20'],
             'price'       => ['nullable','integer','min:0'],
@@ -274,6 +276,24 @@ class EventController extends Controller
             'max_participants'  => ['nullable','integer','min:1'],
             'price_type'       => ['nullable','string','in:free,fixed,range'],
         ]);
+
+        // Собираем datetime из двух раздельных полей
+        $validated['event_date'] = $validated['event_date_day'] . ' ' . $validated['event_date_time'] . ':00';
+        if (!empty($validated['event_date_end_day']) && !empty($validated['event_date_end_time'])) {
+            $validated['event_date_end'] = $validated['event_date_end_day'] . ' ' . $validated['event_date_end_time'] . ':00';
+        } else {
+            $validated['event_date_end'] = null;
+        }
+
+        // Проверяем что дата не в прошлом
+        if (\Carbon\Carbon::parse($validated['event_date'])->isPast()) {
+            return back()->withErrors(['event_date_day' => 'Дата начала должна быть в будущем.'])->withInput();
+        }
+        if ($validated['event_date_end'] && \Carbon\Carbon::parse($validated['event_date_end'])->lte(\Carbon\Carbon::parse($validated['event_date']))) {
+            return back()->withErrors(['event_date_end_day' => 'Дата окончания должна быть позже даты начала.'])->withInput();
+        }
+
+        unset($validated['event_date_day'], $validated['event_date_time'], $validated['event_date_end_day'], $validated['event_date_end_time']);
 
         // Обрабатываем цену по типу
         $priceType = $request->input('price_type', 'free');

@@ -3,9 +3,6 @@
         <style>.leaflet-control-attribution{display:none!important;}</style>
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
         <style>
             #pick-map { height: 300px; border-radius: 12px; }
             .price-tab { transition: all .15s; cursor: pointer; }
@@ -74,28 +71,34 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Начало <span class="text-red-500">*</span></label>
-                    <div class="relative">
-                        <input type="text" id="event_date_display" readonly
-                            class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0] cursor-pointer">
-                        <input type="hidden" name="event_date" id="event_date_hidden"
-                            value="{{ old('event_date', \Carbon\Carbon::parse($event->event_date)->format('Y-m-d H:i:s')) }}">
-                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    </div>
+            {{-- Начало: дата + время раздельно --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Начало <span class="text-red-500">*</span></label>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="date" name="event_date_day" required
+                        min="{{ date('Y-m-d') }}"
+                        value="{{ old('event_date_day', \Carbon\Carbon::parse($event->event_date)->format('Y-m-d')) }}"
+                        class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                    <input type="time" name="event_date_time" required
+                        value="{{ old('event_date_time', \Carbon\Carbon::parse($event->event_date)->format('H:i')) }}"
+                        class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Окончание <span class="text-xs font-normal text-gray-400">— необязательно</span></label>
-                    <div class="relative">
-                        <input type="text" id="event_date_end_display" readonly
-                            class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0] cursor-pointer"
-                            placeholder="Дата и время окончания">
-                        <input type="hidden" name="event_date_end" id="event_date_end_hidden"
-                            value="{{ old('event_date_end', $event->event_date_end ? \Carbon\Carbon::parse($event->event_date_end)->format('Y-m-d H:i:s') : '') }}">
-                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    </div>
+                @error('event_date_day')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+            </div>
+
+            {{-- Окончание: дата + время раздельно --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Окончание <span class="text-xs font-normal text-gray-400">— необязательно</span></label>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="date" name="event_date_end_day"
+                        min="{{ date('Y-m-d') }}"
+                        value="{{ old('event_date_end_day', $event->event_date_end ? \Carbon\Carbon::parse($event->event_date_end)->format('Y-m-d') : '') }}"
+                        class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                    <input type="time" name="event_date_end_time"
+                        value="{{ old('event_date_end_time', $event->event_date_end ? \Carbon\Carbon::parse($event->event_date_end)->format('H:i') : '') }}"
+                        class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
                 </div>
+                @error('event_date_end_day')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
             </div>
 
             <div>
@@ -345,41 +348,6 @@
     }
 
     
-    // Устанавливаем значения hidden полей напрямую из PHP — flatpickr их НЕ трогает
-    const _startVal = "{{ \Carbon\Carbon::parse($event->event_date)->format('Y-m-d H:i:s') }}";
-    document.getElementById('event_date_hidden').value = _startVal;
-
-    let startPickerEdit = flatpickr("#event_date_display", {
-        locale: "ru", enableTime: true, dateFormat: "d.m.Y H:i", time_24hr: true,
-        minDate: "today",
-        defaultDate: _startVal,
-        onChange(dates) {
-            if (!dates[0]) return;
-            const d = dates[0], p = n => String(n).padStart(2,'0');
-            document.getElementById('event_date_hidden').value =
-                `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:00`;
-            if (endPickerEdit) endPickerEdit.set('minDate', dates[0]);
-        }
-    });
-
-    @if($event->event_date_end)
-    const _endVal = "{{ \Carbon\Carbon::parse($event->event_date_end)->format('Y-m-d H:i:s') }}";
-    document.getElementById('event_date_end_hidden').value = _endVal;
-    @endif
-
-    let endPickerEdit = flatpickr("#event_date_end_display", {
-        locale: "ru", enableTime: true, dateFormat: "d.m.Y H:i", time_24hr: true,
-        minDate: _startVal,
-        @if($event->event_date_end) defaultDate: "{{ \Carbon\Carbon::parse($event->event_date_end)->format('Y-m-d H:i') }}", @endif
-        onChange(dates) {
-            if (!dates[0]) return;
-            const d = dates[0], p = n => String(n).padStart(2,'0');
-            document.getElementById('event_date_end_hidden').value =
-                `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:00`;
-        }
-    });
-
-    
     function setPriceType(type) {
         document.getElementById('price_type_field').value = type;
         ['price-fixed','price-range'].forEach(id => document.getElementById(id).classList.add('hidden'));
@@ -431,90 +399,100 @@
         document.getElementById('map-status').className = 'flex items-center gap-2 text-xs mb-3 ' + (ok ? 'text-emerald-600' : 'text-gray-400');
     }
 
+    const DADATA_TOKEN = 'b95f91ab8b6d655ddabe676393bb43b3df308488';
+
     map.on('click', async function(e) {
         const { lat, lng } = e.latlng;
         setMarker(lat, lng);
         setStatus('Определяем адрес...', false);
         map.setView([lat, lng], 16);
         try {
-            const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ru`, { headers: { 'User-Agent': 'GdeDvizh/1.0' } });
+            const r = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/geolocate/address', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Token ' + DADATA_TOKEN },
+                body: JSON.stringify({ lat, lon: lng, count: 1, language: 'ru' })
+            });
             const data = await r.json();
-            if (data && data.address) {
-                const a = data.address;
-                const parts = [a.road, a.house_number, a.city || a.town || a.village].filter(Boolean);
-                const pretty = parts.join(', ') || data.display_name.split(',').slice(0,3).join(',').trim();
-                const addrInput = document.getElementById('address-input');
-                if (!addrInput.dataset.manualEdit) addrInput.value = pretty;
+            const item = (data.suggestions || [])[0];
+            if (item) {
+                const d = item.data;
+                const city   = d.city || d.settlement || d.region_with_type || '';
+                const street = d.street_with_type || '';
+                const house  = d.house ? (d.house_type ? d.house_type + ' ' + d.house : d.house) : '';
+                const pretty = [city, street, house].filter(Boolean).join(', ') || item.value;
+                document.getElementById('address-input').value = pretty;
                 setStatus(pretty, true);
+            } else {
+                setStatus(`${lat.toFixed(5)}, ${lng.toFixed(5)}`, true);
             }
         } catch(e) { setStatus(`${lat.toFixed(5)}, ${lng.toFixed(5)}`, true); }
     });
 
-    
     const addrInput  = document.getElementById('address-input');
     const suggestBox = document.getElementById('suggestions');
     let suggestTimer = null;
 
     addrInput.addEventListener('input', function() {
-        this.dataset.manualEdit = '1';
         clearTimeout(suggestTimer);
         const q = this.value.trim();
-        if (q.length < 3) { suggestBox.classList.add('hidden'); return; }
+        if (q.length < 2) { suggestBox.classList.add('hidden'); return; }
         suggestBox.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:#9ca3af;">Ищем...</div>';
         suggestBox.classList.remove('hidden');
-        suggestTimer = setTimeout(() => {
-            fetchSuggestions(q);
-            autoGeocode(q);
-        }, 400);
+        suggestTimer = setTimeout(() => fetchSuggestions(q), 300);
     });
-
-    async function autoGeocode(q) {
-        try {
-            const urls = [
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&addressdetails=1&accept-language=ru&countrycodes=ru`,
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q.split(',').slice(-2).join(',').trim())}&format=json&limit=1&addressdetails=1&accept-language=ru&countrycodes=ru`,
-            ];
-            for (const url of urls) {
-                const r = await fetch(url, { headers: { 'User-Agent': 'GdeDvizh/1.0' } });
-                const data = await r.json();
-                if (data.length) {
-                    const lat = parseFloat(data[0].lat);
-                    const lng = parseFloat(data[0].lon);
-                    setMarker(lat, lng);
-                    map.setView([lat, lng], 15);
-                    return;
-                }
-            }
-        } catch(e) {}
-    }
 
     async function fetchSuggestions(q) {
         try {
-            const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1&accept-language=ru&countrycodes=ru`, { headers: { 'User-Agent': 'GdeDvizh/1.0' } });
+            const r = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': 'Token ' + DADATA_TOKEN },
+                body: JSON.stringify({ query: q, count: 7, language: 'ru' })
+            });
             const data = await r.json();
-            if (!data.length) { suggestBox.classList.add('hidden'); return; }
-            suggestBox.innerHTML = data.map(item => {
-                const a = item.address || {};
-                const main = [a.road, a.house_number].filter(Boolean).join(', ') || item.display_name.split(',')[0];
-                const sub  = [a.city || a.town || a.village, a.state].filter(Boolean).join(', ');
-                return `<div class="sug-item" data-lat="${item.lat}" data-lon="${item.lon}" data-label="${item.display_name}">
-                    <svg style="flex-shrink:0;margin-top:2px" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <div><div class="sug-main">${main}</div><div class="sug-sub">${sub}</div></div>
+            const items = data.suggestions || [];
+
+            if (!items.length) {
+                suggestBox.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:#9ca3af;">Ничего не найдено</div>';
+                return;
+            }
+
+            suggestBox.innerHTML = items.map(item => {
+                const d = item.data;
+                const city   = d.city || d.settlement || d.region_with_type || '';
+                const street = d.street_with_type || '';
+                const house  = d.house ? (d.house_type ? d.house_type + ' ' + d.house : d.house) : '';
+                const main   = [street, house].filter(Boolean).join(', ') || item.value.split(',')[0];
+                const pretty = [city, street, house].filter(Boolean).join(', ') || item.value;
+                return `<div class="sug-item"
+                    data-lat="${d.geo_lat || ''}" data-lon="${d.geo_lon || ''}"
+                    data-label="${pretty}" data-full="${item.value}">
+                    <svg style="flex-shrink:0;margin-top:2px" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    <div><div class="sug-main">${main || item.value}</div>${city ? `<div class="sug-sub">${city}</div>` : ''}</div>
                 </div>`;
             }).join('');
+
             suggestBox.classList.remove('hidden');
+
             suggestBox.querySelectorAll('.sug-item').forEach(el => {
+                el.addEventListener('mousedown', e => e.preventDefault());
                 el.addEventListener('click', () => {
-                    const lat = parseFloat(el.dataset.lat), lng = parseFloat(el.dataset.lon);
-                    addrInput.value = el.dataset.label;
-                    addrInput.dataset.manualEdit = '';
+                    const lat = parseFloat(el.dataset.lat);
+                    const lng = parseFloat(el.dataset.lon);
+                    const label = el.dataset.label;
+                    addrInput.value = label;
                     suggestBox.classList.add('hidden');
-                    setMarker(lat, lng);
-                    setStatus(el.dataset.label, true);
-                    map.setView([lat, lng], 16);
+                    if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+                        setMarker(lat, lng);
+                        setStatus(label, true);
+                        map.setView([lat, lng], 16);
+                    }
                 });
             });
-        } catch(e) { suggestBox.classList.add('hidden'); }
+        } catch(e) {
+            suggestBox.classList.add('hidden');
+        }
     }
 
     document.addEventListener('click', e => {

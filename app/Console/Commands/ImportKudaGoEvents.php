@@ -11,10 +11,10 @@ use Illuminate\Support\Facades\Http;
 
 class ImportKudaGoEvents extends Command
 {
-    protected $signature   = 'events:import {--pages=3 : Сколько страниц тянуть (25 событий на странице)}';
+    protected $signature   = 'events:import {--pages=3 : Сколько страниц тянуть (25 событий на странице)} {--force : Перезаписывать уже существующие события}';
     protected $description = 'Импорт событий из KudaGo API';
 
-    private const LOCATION = 'chel';
+    private const LOCATION = 'msk';
 
     private const CATEGORY_MAP = [
         'concert'         => 'Музыка и концерты',
@@ -57,6 +57,7 @@ class ImportKudaGoEvents extends Command
                     'fields'      => 'id,title,description,short_title,place,dates,price,is_free,categories,images,age_restriction',
                     'expand'      => 'place,dates',
                     'actual_only' => 1,
+                    'date_from'   => time(),
                     'order_by'    => 'date',
                 ]);
 
@@ -73,7 +74,7 @@ class ImportKudaGoEvents extends Command
             }
 
             foreach ($items as $item) {
-                $result = $this->processItem($item, $bot->id);
+                $result = $this->processItem($item, $bot->id, $this->option('force'));
                 $result ? $created++ : $skipped++;
             }
 
@@ -84,19 +85,21 @@ class ImportKudaGoEvents extends Command
         return self::SUCCESS;
     }
 
-    private function processItem(array $item, int $userId): bool
+    private function processItem(array $item, int $userId, bool $force = false): bool
     {
         $title = trim($item['title'] ?? $item['short_title'] ?? '');
         if (! $title) return false;
 
-        if (Event::where('kudago_id', $item['id'])->exists()) return false;
+        $existing = Event::where('kudago_id', $item['id'])->first();
+        if ($existing && ! $force) return false;
 
         $dates = $item['dates'] ?? [];
         if (empty($dates)) return false;
 
         $firstDate = $dates[0];
         $start = isset($firstDate['start']) ? Carbon::createFromTimestamp($firstDate['start']) : null;
-        if (! $start || $start->isPast()) return false;
+        if (! $start) return false;
+        if (! $force && $start->isPast()) return false;
 
         $description = strip_tags($item['description'] ?? $item['short_title'] ?? $title);
         if (mb_strlen($description) < 20) {
@@ -131,7 +134,9 @@ class ImportKudaGoEvents extends Command
             $age = $map[(int)$restriction] ?? '0+';
         }
 
-        Event::create([
+        Event::updateOrCreate(
+            ['kudago_id' => $item['id']],
+            [
             'user_id'     => $userId,
             'category_id' => $category?->id ?? Category::first()->id,
             'name'        => mb_substr($title, 0, 255),
@@ -144,7 +149,6 @@ class ImportKudaGoEvents extends Command
             'lat'         => $lat ? (float)$lat : null,
             'lng'         => $lng ? (float)$lng : null,
             'status'      => 'approved',
-            'kudago_id'   => $item['id'],
         ]);
 
         return true;

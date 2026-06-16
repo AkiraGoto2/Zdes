@@ -382,6 +382,19 @@
     @endif
 
     document.querySelector('form').addEventListener('submit', function(e) {
+        // Валидация: адрес должен содержать город (lat/lng должны быть заполнены через карту/подсказки)
+        const latVal = document.getElementById('lat').value;
+        const lngVal = document.getElementById('lng').value;
+        const addrVal = document.getElementById('address-input').value.trim();
+        if (!latVal || !lngVal) {
+            e.preventDefault();
+            const addrInput = document.getElementById('address-input');
+            addrInput.setCustomValidity('Укажите адрес через подсказки или кликните на карту, чтобы поставить метку');
+            addrInput.reportValidity();
+            addrInput.setCustomValidity('');
+            return false;
+        }
+
         const from = document.getElementById('price-from');
         const to   = document.getElementById('price-to');
         const err  = document.getElementById('price-range-error');
@@ -418,7 +431,8 @@
         el.className = 'flex items-center gap-2 text-xs mb-3 ' + (ok ? 'text-emerald-600' : 'text-gray-400');
     }
 
-    
+    const DADATA_TOKEN = 'b95f91ab8b6d655ddabe676393bb43b3df308488';
+
     const oldLat = "{{ old('lat') }}", oldLng = "{{ old('lng') }}";
     if (oldLat && oldLng) {
         setMarker(parseFloat(oldLat), parseFloat(oldLng));
@@ -435,110 +449,123 @@
         map.setView([lat, lng], 16);
 
         try {
-            const r = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ru`,
-                { headers: { 'User-Agent': 'GdeDvizh/1.0' } }
-            );
+            const r = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/geolocate/address', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': 'Token ' + DADATA_TOKEN,
+                },
+                body: JSON.stringify({ lat, lon: lng, count: 1, language: 'ru' })
+            });
             const data = await r.json();
-            if (data && data.address) {
-                const a = data.address;
-                const parts = [a.road, a.house_number, a.city || a.town || a.village].filter(Boolean);
-                const pretty = parts.join(', ') || data.display_name.split(',').slice(0,3).join(',').trim();
-                
-                const addrInput = document.getElementById('address-input');
-                if (!addrInput.dataset.manualEdit) {
-                    addrInput.value = pretty;
-                }
+            const item = (data.suggestions || [])[0];
+            if (item) {
+                const d = item.data;
+                const city   = d.city || d.settlement || d.region_with_type || '';
+                const street = d.street_with_type || '';
+                const house  = d.house ? (d.house_type ? d.house_type + ' ' + d.house : d.house) : '';
+                const pretty = [city, street, house].filter(Boolean).join(', ') || item.value;
+                document.getElementById('address-input').value = pretty;
                 setStatus(pretty, true);
+            } else {
+                setStatus(`${lat.toFixed(5)}, ${lng.toFixed(5)}`, true);
             }
         } catch(e) {
             setStatus(`${lat.toFixed(5)}, ${lng.toFixed(5)}`, true);
         }
     });
 
-    
     const addrInput  = document.getElementById('address-input');
     const suggestBox = document.getElementById('suggestions');
     let suggestTimer = null;
 
     addrInput.addEventListener('input', function() {
-        this.dataset.manualEdit = '1';
         clearTimeout(suggestTimer);
         const q = this.value.trim();
-        if (q.length < 3) { suggestBox.classList.add('hidden'); return; }
-        // Показываем индикатор загрузки
+        if (q.length < 2) { suggestBox.classList.add('hidden'); return; }
         suggestBox.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:#9ca3af;">Ищем...</div>';
         suggestBox.classList.remove('hidden');
-        suggestTimer = setTimeout(() => {
-            fetchSuggestions(q);
-            autoGeocode(q);
-        }, 400);
+        suggestTimer = setTimeout(() => fetchSuggestions(q), 300);
     });
-
-    // Автоматически геокодируем адрес без клика на подсказку
-    async function autoGeocode(q) {
-        try {
-            // Пробуем разные варианты запроса
-            const urls = [
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&addressdetails=1&accept-language=ru&countrycodes=ru`,
-                // Если не нашли — пробуем убрать названия зданий (берём только часть после запятой)
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q.split(',').slice(-2).join(',').trim())}&format=json&limit=1&addressdetails=1&accept-language=ru&countrycodes=ru`,
-            ];
-
-            for (const url of urls) {
-                const r = await fetch(url, { headers: { 'User-Agent': 'GdeDvizh/1.0' } });
-                const data = await r.json();
-                if (data.length) {
-                    const lat = parseFloat(data[0].lat);
-                    const lng = parseFloat(data[0].lon);
-                    setMarker(lat, lng);
-                    map.setView([lat, lng], 15);
-                    return;
-                }
-            }
-        } catch(e) {}
-    }
 
     async function fetchSuggestions(q) {
         try {
-            const r = await fetch(
-                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1&accept-language=ru`,
-                { headers: { 'User-Agent': 'GdeDvizh/1.0' } }
-            );
+            const r = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': 'Token ' + DADATA_TOKEN,
+                },
+                body: JSON.stringify({ query: q, count: 7, language: 'ru' })
+            });
             const data = await r.json();
-            if (!data.length) { suggestBox.classList.add('hidden'); return; }
+            const items = data.suggestions || [];
 
-            suggestBox.innerHTML = data.map(item => {
-                const a = item.address || {};
-                const main = [a.road, a.house_number].filter(Boolean).join(', ') || item.display_name.split(',')[0];
-                const sub  = [a.city || a.town || a.village, a.state].filter(Boolean).join(', ');
-                return `<div class="sug-item" data-lat="${item.lat}" data-lon="${item.lon}" data-label="${item.display_name}" data-city="${a.city || a.town || a.village || ''}">
+            if (!items.length) {
+                suggestBox.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:#9ca3af;">Ничего не найдено</div>';
+                return;
+            }
+
+            suggestBox.innerHTML = items.map(item => {
+                const d = item.data;
+                const city = d.city || d.settlement || d.region_with_type || '';
+                const street = d.street_with_type || '';
+                const house  = d.house ? (d.house_type ? d.house_type + ' ' + d.house : d.house) : '';
+                const main   = [street, house].filter(Boolean).join(', ') || item.value.split(',')[0];
+                const pretty = [city, street, house].filter(Boolean).join(', ') || item.value;
+                return `<div class="sug-item"
+                    data-lat="${d.geo_lat || ''}" data-lon="${d.geo_lon || ''}"
+                    data-label="${pretty}" data-full="${item.value}">
                     <svg style="flex-shrink:0;margin-top:2px" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
                     </svg>
-                    <div><div class="sug-main">${main}</div><div class="sug-sub">${sub}</div></div>
+                    <div><div class="sug-main">${main || item.value}</div>${city ? `<div class="sug-sub">${city}</div>` : ''}</div>
                 </div>`;
             }).join('');
 
             suggestBox.classList.remove('hidden');
 
             suggestBox.querySelectorAll('.sug-item').forEach(el => {
+                el.addEventListener('mousedown', e => e.preventDefault()); // не теряем фокус
                 el.addEventListener('click', () => {
                     const lat = parseFloat(el.dataset.lat);
                     const lng = parseFloat(el.dataset.lon);
                     const label = el.dataset.label;
 
                     addrInput.value = label;
-                    addrInput.dataset.manualEdit = '';
                     suggestBox.classList.add('hidden');
-                    setMarker(lat, lng);
-                    setStatus(label, true);
-                    map.setView([lat, lng], 16);
+
+                    if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+                        setMarker(lat, lng);
+                        setStatus(label, true);
+                        map.setView([lat, lng], 16);
+                    } else {
+                        // координат нет — геокодируем через Nominatim как запасной
+                        autoGeocodeNominatim(el.dataset.full || label);
+                    }
                 });
             });
         } catch(e) {
             suggestBox.classList.add('hidden');
         }
+    }
+
+    // Запасной геокодер если Dadata не вернула координаты
+    async function autoGeocodeNominatim(q) {
+        try {
+            const r = await fetch(
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=ru`,
+                { headers: { 'User-Agent': 'GdeDvizh/1.0' } }
+            );
+            const data = await r.json();
+            if (data.length) {
+                const lat = parseFloat(data[0].lat), lng = parseFloat(data[0].lon);
+                setMarker(lat, lng);
+                map.setView([lat, lng], 15);
+            }
+        } catch(e) {}
     }
 
     
