@@ -137,13 +137,21 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                     Адрес <span class="text-red-500">*</span>
-                    <span class="text-xs font-normal text-gray-400 ml-1">— начните вводить, выберите из подсказок</span>
+                    <span class="text-xs font-normal text-gray-400 ml-1">— начните вводить, карта обновится автоматически</span>
                 </label>
                 <div class="relative">
                     <input type="text" name="address" id="address-input"
                         value="{{ old('address', $event->address) }}"
                         required autocomplete="off"
-                        class="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                        placeholder="Город, улица, дом — например: Челябинск, ул. Кирова, 114"
+                        onkeydown="if(event.key==='Enter'){event.preventDefault();autoGeocode(this.value.trim());}"
+                        class="w-full border border-gray-300 rounded-xl px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A40E0]">
+                    <button type="button" onclick="autoGeocode(document.getElementById('address-input').value.trim())"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#4A40E0]" title="Найти на карте">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="m21 21-4.35-4.35"/>
+                        </svg>
+                    </button>
                     <div id="suggestions" class="hidden"></div>
                 </div>
             </div>
@@ -337,21 +345,31 @@
     }
 
     
+    // Устанавливаем значения hidden полей напрямую из PHP — flatpickr их НЕ трогает
+    const _startVal = "{{ \Carbon\Carbon::parse($event->event_date)->format('Y-m-d H:i:s') }}";
+    document.getElementById('event_date_hidden').value = _startVal;
+
     let startPickerEdit = flatpickr("#event_date_display", {
         locale: "ru", enableTime: true, dateFormat: "d.m.Y H:i", time_24hr: true,
-        defaultDate: "{{ \Carbon\Carbon::parse($event->event_date)->format('Y-m-d H:i') }}",
+        minDate: "today",
+        defaultDate: _startVal,
         onChange(dates) {
             if (!dates[0]) return;
             const d = dates[0], p = n => String(n).padStart(2,'0');
             document.getElementById('event_date_hidden').value =
                 `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:00`;
-            endPickerEdit.set('minDate', dates[0]);
+            if (endPickerEdit) endPickerEdit.set('minDate', dates[0]);
         }
     });
-    document.getElementById('event_date_hidden').value = '{{ \Carbon\Carbon::parse($event->event_date)->format('Y-m-d H:i:s') }}';
+
+    @if($event->event_date_end)
+    const _endVal = "{{ \Carbon\Carbon::parse($event->event_date_end)->format('Y-m-d H:i:s') }}";
+    document.getElementById('event_date_end_hidden').value = _endVal;
+    @endif
 
     let endPickerEdit = flatpickr("#event_date_end_display", {
         locale: "ru", enableTime: true, dateFormat: "d.m.Y H:i", time_24hr: true,
+        minDate: _startVal,
         @if($event->event_date_end) defaultDate: "{{ \Carbon\Carbon::parse($event->event_date_end)->format('Y-m-d H:i') }}", @endif
         onChange(dates) {
             if (!dates[0]) return;
@@ -442,19 +460,44 @@
         clearTimeout(suggestTimer);
         const q = this.value.trim();
         if (q.length < 3) { suggestBox.classList.add('hidden'); return; }
-        suggestTimer = setTimeout(() => fetchSuggestions(q), 350);
+        suggestBox.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:#9ca3af;">Ищем...</div>';
+        suggestBox.classList.remove('hidden');
+        suggestTimer = setTimeout(() => {
+            fetchSuggestions(q);
+            autoGeocode(q);
+        }, 400);
     });
+
+    async function autoGeocode(q) {
+        try {
+            const urls = [
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&addressdetails=1&accept-language=ru&countrycodes=ru`,
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q.split(',').slice(-2).join(',').trim())}&format=json&limit=1&addressdetails=1&accept-language=ru&countrycodes=ru`,
+            ];
+            for (const url of urls) {
+                const r = await fetch(url, { headers: { 'User-Agent': 'GdeDvizh/1.0' } });
+                const data = await r.json();
+                if (data.length) {
+                    const lat = parseFloat(data[0].lat);
+                    const lng = parseFloat(data[0].lon);
+                    setMarker(lat, lng);
+                    map.setView([lat, lng], 15);
+                    return;
+                }
+            }
+        } catch(e) {}
+    }
 
     async function fetchSuggestions(q) {
         try {
-            const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1&accept-language=ru`, { headers: { 'User-Agent': 'GdeDvizh/1.0' } });
+            const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1&accept-language=ru&countrycodes=ru`, { headers: { 'User-Agent': 'GdeDvizh/1.0' } });
             const data = await r.json();
             if (!data.length) { suggestBox.classList.add('hidden'); return; }
             suggestBox.innerHTML = data.map(item => {
                 const a = item.address || {};
                 const main = [a.road, a.house_number].filter(Boolean).join(', ') || item.display_name.split(',')[0];
                 const sub  = [a.city || a.town || a.village, a.state].filter(Boolean).join(', ');
-                return `<div class="sug-item" data-lat="${item.lat}" data-lon="${item.lon}" data-label="${main}">
+                return `<div class="sug-item" data-lat="${item.lat}" data-lon="${item.lon}" data-label="${item.display_name}">
                     <svg style="flex-shrink:0;margin-top:2px" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                     <div><div class="sug-main">${main}</div><div class="sug-sub">${sub}</div></div>
                 </div>`;

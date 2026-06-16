@@ -129,7 +129,11 @@ class EventController extends Controller
             'description' => ['required','string','min:20'],
             'price'       => ['nullable','integer','min:0'],
             'price_to'    => ['nullable','integer','min:0'],
-            'address'     => ['required','string','max:255'],
+            'address'     => ['required','string','max:255', function($attr, $val, $fail) {
+                if (mb_strlen(trim($val)) < 5) {
+                    $fail('Укажите полный адрес с городом.');
+                }
+            }],
             'lat'         => ['nullable','numeric'],
             'lng'         => ['nullable','numeric'],
             'photos'      => ['nullable','array','max:8'],
